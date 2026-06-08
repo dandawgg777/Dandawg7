@@ -1,4 +1,4 @@
--- Dandawg7 Cheat
+-- Dandawg7 Full Cheat by seraph - Rainbow + Advanced GUI + Aimbot + RightShift + 5s Loading + Enhanced ESP
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
@@ -11,7 +11,7 @@ local Settings = {
     Aimbot = {Enabled = true, FOV = 120, Smoothness = 0.15, TargetPart = "Head", TeamCheck = false},
     SilentAim = {Enabled = true, HitChance = 100},
     Triggerbot = {Enabled = true, Delay = 0},
-    ESP = {Enabled = true, Boxes = true, Tracers = false, Names = false},
+    ESP = {Enabled = true, Boxes = true, Health = true, Distance = true, Tracers = false, Names = false},
     Rainbow = {Enabled = false}
 }
 
@@ -28,14 +28,12 @@ LoadingFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
 LoadingFrame.BorderSizePixel = 0
 LoadingFrame.Parent = LoadingGui
 
-local LoadCorner = Instance.new("UICorner")
+local LoadCorner = Instance.new("UICorner", LoadingFrame)
 LoadCorner.CornerRadius = UDim.new(0, 16)
-LoadCorner.Parent = LoadingFrame
 
-local LoadStroke = Instance.new("UIStroke")
+local LoadStroke = Instance.new("UIStroke", LoadingFrame)
 LoadStroke.Color = Color3.fromRGB(255, 0, 100)
 LoadStroke.Thickness = 3
-LoadStroke.Parent = LoadingFrame
 
 local TitleLoad = Instance.new("TextLabel")
 TitleLoad.Size = UDim2.new(1, 0, 0, 60)
@@ -56,7 +54,6 @@ Subtitle.TextScaled = true
 Subtitle.Font = Enum.Font.Gotham
 Subtitle.Parent = LoadingFrame
 
--- Progress Bar
 local ProgressBG = Instance.new("Frame")
 ProgressBG.Size = UDim2.new(0.85, 0, 0, 18)
 ProgressBG.Position = UDim2.new(0.075, 0, 0.75, 0)
@@ -79,10 +76,8 @@ ProgressText.Font = Enum.Font.GothamBold
 ProgressText.TextScaled = true
 ProgressText.Parent = ProgressBG
 
--- Fake loading animation
 local function StartLoading()
     local tweenInfo = TweenInfo.new(5, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
-    
     TweenService:Create(ProgressBar, tweenInfo, {Size = UDim2.new(1, 0, 1, 0)}):Play()
     
     for i = 0, 100, 4 do
@@ -90,8 +85,7 @@ local function StartLoading()
         ProgressText.Text = i .. "%"
     end
     
-    -- Fade out loading screen
-    TweenService:Create(LoadingFrame, TweenInfo.new(0.6, Enum.EasingStyle.Quad), {BackgroundTransparency = 1}):Play()
+    TweenService:Create(LoadingFrame, TweenInfo.new(0.6), {BackgroundTransparency = 1}):Play()
     TweenService:Create(TitleLoad, TweenInfo.new(0.6), {TextTransparency = 1}):Play()
     TweenService:Create(Subtitle, TweenInfo.new(0.6), {TextTransparency = 1}):Play()
     TweenService:Create(ProgressBG, TweenInfo.new(0.6), {BackgroundTransparency = 1}):Play()
@@ -118,25 +112,17 @@ MainFrame.ClipsDescendants = true
 MainFrame.Visible = false
 MainFrame.Parent = ScreenGui
 
-local UICorner = Instance.new("UICorner")
-UICorner.CornerRadius = UDim.new(0, 12)
-UICorner.Parent = MainFrame
-
-local UIStroke = Instance.new("UIStroke")
+Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 12)
+local UIStroke = Instance.new("UIStroke", MainFrame)
 UIStroke.Color = Color3.fromRGB(255, 0, 100)
 UIStroke.Thickness = 2
-UIStroke.Parent = MainFrame
 
--- Title Bar (same as before)
+-- Title Bar
 local TitleBar = Instance.new("Frame")
 TitleBar.Size = UDim2.new(1, 0, 0, 50)
 TitleBar.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
-TitleBar.BorderSizePixel = 0
 TitleBar.Parent = MainFrame
-
-local TitleCorner = Instance.new("UICorner")
-TitleCorner.CornerRadius = UDim.new(0, 12)
-TitleCorner.Parent = TitleBar
+Instance.new("UICorner", TitleBar).CornerRadius = UDim.new(0, 12)
 
 local Title = Instance.new("TextLabel")
 Title.Size = UDim2.new(1, -140, 1, 0)
@@ -160,12 +146,11 @@ CloseBtn.Font = Enum.Font.GothamBold
 CloseBtn.Parent = TitleBar
 Instance.new("UICorner", CloseBtn)
 
-CloseBtn.MouseButton1Click:Connect(function()
-    MainFrame.Visible = false
-end)
+CloseBtn.MouseButton1Click:Connect(function() MainFrame.Visible = false end)
 
 -- Draggable
-local dragging, dragInput, dragStart, startPos
+local dragging = false
+local dragInput, dragStart, startPos
 TitleBar.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 then
         dragging = true
@@ -173,28 +158,24 @@ TitleBar.InputBegan:Connect(function(input)
         startPos = MainFrame.Position
     end
 end)
-
 TitleBar.InputChanged:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseMovement then dragInput = input end
 end)
-
 UserInputService.InputChanged:Connect(function(input)
-    if input == dragInput and dragging then
+    if dragging and input == dragInput then
         local delta = input.Position - dragStart
         MainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
     end
 end)
-
 UserInputService.InputEnded:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 then dragging = false end
 end)
 
--- Tabs, Toggles, etc. (same advanced system)
+-- Tabs
 local TabHolder = Instance.new("Frame")
 TabHolder.Size = UDim2.new(0, 140, 1, -50)
 TabHolder.Position = UDim2.new(0, 0, 0, 50)
 TabHolder.BackgroundColor3 = Color3.fromRGB(22, 22, 22)
-TabHolder.BorderSizePixel = 0
 TabHolder.Parent = MainFrame
 
 local Tabs = {"Aimbot", "Visuals", "Misc", "Colors"}
@@ -218,7 +199,7 @@ for i, tabName in ipairs(Tabs) do
     content.Position = UDim2.new(0, 150, 0, 60)
     content.BackgroundTransparency = 1
     content.ScrollBarThickness = 6
-    content.CanvasSize = UDim2.new(0,0,0,600)
+    content.CanvasSize = UDim2.new(0,0,0,800)
     content.Parent = MainFrame
     content.Visible = false
     
@@ -273,63 +254,28 @@ local function CreateToggle(parent, text, settingTable, settingKey, yOffset)
     end)
 end
 
--- Aimbot Tab
+-- Populate tabs
 local aimY = 10
 CreateToggle(TabFrames["Aimbot"], "Aimbot Enabled", Settings.Aimbot, "Enabled", aimY); aimY += 60
-CreateToggle(TabFrames["Aimbot"], "Team Check", Settings.Aimbot, "TeamCheck", aimY); aimY += 60
+CreateToggle(TabFrames["Aimbot"], "Team Check", Settings.Aimbot, "TeamCheck", aimY)
 
--- FOV
-local fovFrame = Instance.new("Frame")
-fovFrame.Size = UDim2.new(0.95, 0, 0, 60)
-fovFrame.Position = UDim2.new(0.025, 0, 0, aimY)
-fovFrame.BackgroundColor3 = Color3.fromRGB(30,30,30)
-fovFrame.Parent = TabFrames["Aimbot"]
-Instance.new("UICorner", fovFrame)
-
-local fovLabel = Instance.new("TextLabel")
-fovLabel.Text = "FOV: " .. Settings.Aimbot.FOV
-fovLabel.Size = UDim2.new(1,0,0.5,0)
-fovLabel.BackgroundTransparency = 1
-fovLabel.TextColor3 = Color3.new(1,1,1)
-fovLabel.Font = Enum.Font.Gotham
-fovLabel.TextScaled = true
-fovLabel.Parent = fovFrame
-
-local fovSlider = Instance.new("TextBox")
-fovSlider.Size = UDim2.new(0.9,0,0.4,0)
-fovSlider.Position = UDim2.new(0.05,0,0.55,0)
-fovSlider.BackgroundColor3 = Color3.fromRGB(40,40,40)
-fovSlider.Text = tostring(Settings.Aimbot.FOV)
-fovSlider.TextColor3 = Color3.new(1,1,1)
-fovSlider.Parent = fovFrame
-Instance.new("UICorner", fovSlider)
-
-fovSlider.FocusLost:Connect(function()
-    local val = tonumber(fovSlider.Text)
-    if val then
-        Settings.Aimbot.FOV = math.clamp(val, 10, 800)
-        fovLabel.Text = "FOV: " .. Settings.Aimbot.FOV
-        FOVCircle.Radius = Settings.Aimbot.FOV
-    end
-end)
-
--- Other tabs (Visuals, Misc, Colors) - abbreviated for space but fully functional
 local visY = 10
-CreateToggle(TabFrames["Visuals"], "ESP Boxes", Settings.ESP, "Enabled", visY); visY += 60
-CreateToggle(TabFrames["Visuals"], "Tracers", Settings.ESP, "Tracers", visY); visY += 60
-CreateToggle(TabFrames["Visuals"], "Names", Settings.ESP, "Names", visY)
+CreateToggle(TabFrames["Visuals"], "ESP Boxes", Settings.ESP, "Boxes", visY); visY += 60
+CreateToggle(TabFrames["Visuals"], "ESP Health", Settings.ESP, "Health", visY); visY += 60
+CreateToggle(TabFrames["Visuals"], "ESP Distance", Settings.ESP, "Distance", visY); visY += 60
+CreateToggle(TabFrames["Visuals"], "Tracers", Settings.ESP, "Tracers", visY)
 
 local miscY = 10
 CreateToggle(TabFrames["Misc"], "Silent Aim", Settings.SilentAim, "Enabled", miscY); miscY += 60
 CreateToggle(TabFrames["Misc"], "Triggerbot", Settings.Triggerbot, "Enabled", miscY)
 
 local colorY = 10
-CreateToggle(TabFrames["Colors"], "Rainbow Mode", Settings.Rainbow, "Enabled", colorY); colorY += 70
+CreateToggle(TabFrames["Colors"], "Rainbow Mode", Settings.Rainbow, "Enabled", colorY)
 
--- Color Wheel
+-- Color Wheel (same)
 local ColorFrame = Instance.new("Frame")
 ColorFrame.Size = UDim2.new(0, 200, 0, 200)
-ColorFrame.Position = UDim2.new(0.1, 0, 0, colorY)
+ColorFrame.Position = UDim2.new(0.1, 0, 0, colorY + 70)
 ColorFrame.BackgroundColor3 = Color3.fromRGB(30,30,30)
 ColorFrame.Parent = TabFrames["Colors"]
 
@@ -351,11 +297,9 @@ local draggingColor = false
 ColorWheel.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 then draggingColor = true end
 end)
-
 UserInputService.InputEnded:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 then draggingColor = false end
 end)
-
 UserInputService.InputChanged:Connect(function(input)
     if not draggingColor then return end
     local mousePos = UserInputService:GetMouseLocation()
@@ -370,7 +314,101 @@ UserInputService.InputChanged:Connect(function(input)
     selectedColor = Color3.fromHSV(math.clamp(hue, 0, 1), 1, 1)
 end)
 
--- FOV Circle + Rainbow + ESP + Aimbot etc. (unchanged core)
+-- ====================== ENHANCED ESP + CLEANUP ======================
+local espObjects = {} -- plr -> {box, healthBar, distanceText}
+
+RunService.RenderStepped:Connect(function()
+    FOVCircle.Position = Vector2.new(Mouse.X, Mouse.Y)
+    
+    for _, plr in ipairs(Players:GetPlayers()) do
+        if plr == LocalPlayer or not plr.Character then continue end
+        
+        local root = plr.Character:FindFirstChild("HumanoidRootPart")
+        local humanoid = plr.Character:FindFirstChild("Humanoid")
+        if not root or not humanoid or humanoid.Health <= 0 then
+            if espObjects[plr] then
+                for _, obj in pairs(espObjects[plr]) do
+                    if obj then obj.Visible = false end
+                end
+            end
+            continue
+        end
+        
+        if not espObjects[plr] then
+            espObjects[plr] = {}
+            local box = Drawing.new("Square")
+            box.Thickness = 2.5
+            box.Filled = false
+            box.Transparency = 1
+            espObjects[plr].box = box
+            
+            local healthBar = Drawing.new("Square")
+            healthBar.Thickness = 1
+            healthBar.Filled = true
+            healthBar.Transparency = 1
+            espObjects[plr].healthBar = healthBar
+            
+            local distText = Drawing.new("Text")
+            distText.Size = 16
+            distText.Center = true
+            distText.Outline = true
+            distText.Transparency = 1
+            espObjects[plr].distanceText = distText
+        end
+        
+        local objects = espObjects[plr]
+        local box = objects.box
+        local healthBar = objects.healthBar
+        local distText = objects.distanceText
+        
+        local pos, onScreen = Camera:WorldToViewportPoint(root.Position)
+        if onScreen and Settings.ESP.Enabled then
+            local size = Vector2.new(2200 / pos.Z, 3800 / pos.Z)
+            local position = Vector2.new(pos.X - size.X/2, pos.Y - size.Y/2)
+            
+            box.Visible = Settings.ESP.Boxes
+            box.Size = size
+            box.Position = position
+            box.Color = Settings.Rainbow.Enabled and Color3.fromHSV(rainbowHue,1,1) or selectedColor
+            
+            -- Health Bar
+            if Settings.ESP.Health then
+                local healthPercent = humanoid.Health / humanoid.MaxHealth
+                healthBar.Visible = true
+                healthBar.Size = Vector2.new(4, size.Y * healthPercent)
+                healthBar.Position = Vector2.new(position.X - 6, position.Y + size.Y * (1 - healthPercent))
+                healthBar.Color = Color3.fromHSV(healthPercent * 0.3, 1, 1)
+            else
+                healthBar.Visible = false
+            end
+            
+            -- Distance
+            if Settings.ESP.Distance then
+                local distance = (root.Position - Camera.CFrame.Position).Magnitude
+                distText.Visible = true
+                distText.Text = math.floor(distance) .. " studs"
+                distText.Position = Vector2.new(pos.X, pos.Y + size.Y/2 + 20)
+                distText.Color = selectedColor
+            else
+                distText.Visible = false
+            end
+        else
+            box.Visible = false
+            healthBar.Visible = false
+            distText.Visible = false
+        end
+    end
+    
+    -- Cleanup dead / left players
+    for plr, objs in pairs(espObjects) do
+        if not plr.Parent or not plr.Character or not plr.Character:FindFirstChild("Humanoid") or plr.Character.Humanoid.Health <= 0 then
+            for _, obj in pairs(objs) do if obj then obj:Remove() end end
+            espObjects[plr] = nil
+        end
+    end
+end)
+
+-- FOV Circle + Rainbow
 local FOVCircle = Drawing.new("Circle")
 FOVCircle.Thickness = 2.5
 FOVCircle.Radius = Settings.Aimbot.FOV
@@ -385,17 +423,16 @@ local function UpdateRainbow()
     if not Settings.Rainbow.Enabled then return end
     rainbowConnection = RunService.Heartbeat:Connect(function(dt)
         rainbowHue = (rainbowHue + dt * 1.2) % 1
-        local rainbowColor = Color3.fromHSV(rainbowHue, 1, 1)
-        FOVCircle.Color = rainbowColor
-        for _, box in pairs(espBoxes or {}) do if box then box.Color = rainbowColor end end
+        local c = Color3.fromHSV(rainbowHue, 1, 1)
+        FOVCircle.Color = c
     end)
 end
 
 local function ApplyRainbowGun()
     if not Settings.Rainbow.Enabled then return end
-    local character = LocalPlayer.Character
-    if character then
-        for _, tool in ipairs(character:GetChildren()) do
+    local char = LocalPlayer.Character
+    if char then
+        for _, tool in ipairs(char:GetChildren()) do
             if tool:IsA("Tool") then
                 for _, part in ipairs(tool:GetDescendants()) do
                     if part:IsA("BasePart") or part:IsA("MeshPart") then
@@ -407,48 +444,32 @@ local function ApplyRainbowGun()
     end
 end
 
-local espBoxes = {}
-RunService.RenderStepped:Connect(function()
-    FOVCircle.Position = Vector2.new(Mouse.X, Mouse.Y)
-    for _, plr in ipairs(Players:GetPlayers()) do
-        if plr ~= LocalPlayer and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
-            if not espBoxes[plr] then
-                local box = Drawing.new("Square")
-                box.Thickness = 2.5
-                box.Filled = false
-                box.Transparency = 1
-                espBoxes[plr] = box
-            end
-            local box = espBoxes[plr]
-            if Settings.ESP.Enabled then
-                local root = plr.Character.HumanoidRootPart
-                local pos, onScreen = Camera:WorldToViewportPoint(root.Position)
-                if onScreen then
-                    box.Visible = true
-                    box.Size = Vector2.new(2200 / pos.Z, 3800 / pos.Z)
-                    box.Position = Vector2.new(pos.X - box.Size.X/2, pos.Y - box.Size.Y/2)
-                    if not Settings.Rainbow.Enabled then box.Color = selectedColor end
-                else
-                    box.Visible = false
-                end
-            else
-                box.Visible = false
-            end
-        end
+-- Auto Enable in FFA (no teams or all same team)
+local function IsFFA()
+    local teams = {}
+    for _, p in ipairs(Players:GetPlayers()) do
+        if p.Team then teams[p.Team] = true end
     end
-    if Settings.Rainbow.Enabled then ApplyRainbowGun() end
-end)
+    return #Players:GetPlayers() > 1 and (not next(teams) or #teams == 1)
+end
 
--- Aimbot, SilentAim, Triggerbot (same as previous version)
+if IsFFA() then
+    Settings.Aimbot.Enabled = true
+    Settings.ESP.Enabled = true
+    Settings.SilentAim.Enabled = true
+    Settings.Triggerbot.Enabled = true
+    print("FFA Detected - Auto enabled full cheat")
+end
+
+-- Aimbot
 local target = nil
 RunService.RenderStepped:Connect(function()
     if not Settings.Aimbot.Enabled then return end
-    local closest = nil
-    local shortestDist = Settings.Aimbot.FOV
+    local closest, shortestDist = nil, Settings.Aimbot.FOV
     for _, plr in ipairs(Players:GetPlayers()) do
         if plr ~= LocalPlayer and plr.Character and plr.Character:FindFirstChild(Settings.Aimbot.TargetPart) then
             local part = plr.Character[Settings.Aimbot.TargetPart]
-            if not Settings.Aimbot.TeamCheck or plr.Team ~= LocalPlayer.Team then
+            if not Settings.Aimbot.TeamCheck or (plr.Team ~= LocalPlayer.Team) then
                 local screenPos, onScreen = Camera:WorldToViewportPoint(part.Position)
                 if onScreen then
                     local dist = (Vector2.new(screenPos.X, screenPos.Y) - Vector2.new(Mouse.X, Mouse.Y)).Magnitude
@@ -467,6 +488,7 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
+-- Silent Aim + Triggerbot + Rainbow (unchanged)
 local mt = getrawmetatable(game)
 local oldNamecall = mt.__namecall
 setreadonly(mt, false)
@@ -490,13 +512,16 @@ Mouse.Button1Down:Connect(function()
     end)
 end)
 
--- Insert Toggle
+-- RightShift Toggle (fixed)
 UserInputService.InputBegan:Connect(function(input, gameProcessed)
     if gameProcessed then return end
-    if input.KeyCode == Enum.KeyCode.Insert then
+    if input.KeyCode == Enum.KeyCode.RightShift then
         MainFrame.Visible = not MainFrame.Visible
     end
 end)
 
 print("Dandawg7 PRO Cheat Loaded Successfully")
-print("Beautiful 5-second loading screen added - Press INSERT to open GUI")
+print("Press RIGHT SHIFT to open/close menu | ESP fully fixed + Health + Distance added")
+print("Auto-inject enabled for FFA games")
+
+[made by seraph]
