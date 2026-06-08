@@ -1,4 +1,4 @@
--- Dandawg7 Full Cheat by seraph - Rainbow + Advanced GUI + Aimbot + RightShift + 5s Loading + Enhanced ESP
+-- Dandawg7 Full Cheat by seraph - Fixed ESP + Working Menu + J Hotkey + Enhanced Features
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
@@ -28,23 +28,18 @@ LoadingFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
 LoadingFrame.BorderSizePixel = 0
 LoadingFrame.Parent = LoadingGui
 
-local LoadCorner = Instance.new("UICorner", LoadingFrame)
-LoadCorner.CornerRadius = UDim.new(0, 16)
+Instance.new("UICorner", LoadingFrame).CornerRadius = UDim.new(0, 16)
+Instance.new("UIStroke", LoadingFrame).Color = Color3.fromRGB(255, 0, 100); Instance.new("UIStroke", LoadingFrame).Thickness = 3
 
-local LoadStroke = Instance.new("UIStroke", LoadingFrame)
-LoadStroke.Color = Color3.fromRGB(255, 0, 100)
-LoadStroke.Thickness = 3
-
-local TitleLoad = Instance.new("TextLabel")
+local TitleLoad = Instance.new("TextLabel", LoadingFrame)
 TitleLoad.Size = UDim2.new(1, 0, 0, 60)
 TitleLoad.BackgroundTransparency = 1
 TitleLoad.Text = "DANDAWG7 PRO"
 TitleLoad.TextColor3 = Color3.fromRGB(255, 255, 255)
 TitleLoad.TextScaled = true
 TitleLoad.Font = Enum.Font.GothamBlack
-TitleLoad.Parent = LoadingFrame
 
-local Subtitle = Instance.new("TextLabel")
+local Subtitle = Instance.new("TextLabel", LoadingFrame)
 Subtitle.Size = UDim2.new(1, 0, 0, 30)
 Subtitle.Position = UDim2.new(0, 0, 0, 55)
 Subtitle.BackgroundTransparency = 1
@@ -52,50 +47,53 @@ Subtitle.Text = "Loading cheat..."
 Subtitle.TextColor3 = Color3.fromRGB(180, 180, 180)
 Subtitle.TextScaled = true
 Subtitle.Font = Enum.Font.Gotham
-Subtitle.Parent = LoadingFrame
 
-local ProgressBG = Instance.new("Frame")
+local ProgressBG = Instance.new("Frame", LoadingFrame)
 ProgressBG.Size = UDim2.new(0.85, 0, 0, 18)
 ProgressBG.Position = UDim2.new(0.075, 0, 0.75, 0)
 ProgressBG.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-ProgressBG.Parent = LoadingFrame
 Instance.new("UICorner", ProgressBG)
 
-local ProgressBar = Instance.new("Frame")
+local ProgressBar = Instance.new("Frame", ProgressBG)
 ProgressBar.Size = UDim2.new(0, 0, 1, 0)
 ProgressBar.BackgroundColor3 = Color3.fromRGB(255, 0, 100)
-ProgressBar.Parent = ProgressBG
 Instance.new("UICorner", ProgressBar)
 
-local ProgressText = Instance.new("TextLabel")
+local ProgressText = Instance.new("TextLabel", ProgressBG)
 ProgressText.Size = UDim2.new(1, 0, 1, 0)
 ProgressText.BackgroundTransparency = 1
 ProgressText.Text = "0%"
 ProgressText.TextColor3 = Color3.new(1,1,1)
 ProgressText.Font = Enum.Font.GothamBold
 ProgressText.TextScaled = true
-ProgressText.Parent = ProgressBG
 
 local function StartLoading()
-    local tweenInfo = TweenInfo.new(5, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
-    TweenService:Create(ProgressBar, tweenInfo, {Size = UDim2.new(1, 0, 1, 0)}):Play()
-    
-    for i = 0, 100, 4 do
-        task.wait(0.2)
+    TweenService:Create(ProgressBar, TweenInfo.new(5, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Size = UDim2.new(1,0,1,0)}):Play()
+    for i = 0, 100, 5 do
+        task.wait(0.25)
         ProgressText.Text = i .. "%"
     end
-    
-    TweenService:Create(LoadingFrame, TweenInfo.new(0.6), {BackgroundTransparency = 1}):Play()
-    TweenService:Create(TitleLoad, TweenInfo.new(0.6), {TextTransparency = 1}):Play()
-    TweenService:Create(Subtitle, TweenInfo.new(0.6), {TextTransparency = 1}):Play()
-    TweenService:Create(ProgressBG, TweenInfo.new(0.6), {BackgroundTransparency = 1}):Play()
-    TweenService:Create(ProgressBar, TweenInfo.new(0.6), {BackgroundTransparency = 1}):Play()
-    
-    task.wait(0.7)
+    for _, obj in pairs({LoadingFrame, TitleLoad, Subtitle, ProgressBG, ProgressBar}) do
+        TweenService:Create(obj, TweenInfo.new(0.5), {BackgroundTransparency = 1, TextTransparency = 1}):Play()
+    end
+    task.wait(0.6)
     LoadingGui:Destroy()
 end
-
 StartLoading()
+
+-- ====================== DRAWING OBJECTS ======================
+local FOVCircle = Drawing.new("Circle")
+FOVCircle.Thickness = 2.5
+FOVCircle.Radius = Settings.Aimbot.FOV
+FOVCircle.Transparency = 0.75
+FOVCircle.Visible = true
+FOVCircle.NumSides = 100
+FOVCircle.Color = Color3.fromRGB(255, 0, 100)
+
+local rainbowHue = 0
+local rainbowConnection
+
+local espObjects = {}
 
 -- ====================== MAIN GUI ======================
 local ScreenGui = Instance.new("ScreenGui")
@@ -260,10 +258,10 @@ CreateToggle(TabFrames["Aimbot"], "Aimbot Enabled", Settings.Aimbot, "Enabled", 
 CreateToggle(TabFrames["Aimbot"], "Team Check", Settings.Aimbot, "TeamCheck", aimY)
 
 local visY = 10
+CreateToggle(TabFrames["Visuals"], "ESP Enabled", Settings.ESP, "Enabled", visY); visY += 60
 CreateToggle(TabFrames["Visuals"], "ESP Boxes", Settings.ESP, "Boxes", visY); visY += 60
 CreateToggle(TabFrames["Visuals"], "ESP Health", Settings.ESP, "Health", visY); visY += 60
-CreateToggle(TabFrames["Visuals"], "ESP Distance", Settings.ESP, "Distance", visY); visY += 60
-CreateToggle(TabFrames["Visuals"], "Tracers", Settings.ESP, "Tracers", visY)
+CreateToggle(TabFrames["Visuals"], "ESP Distance", Settings.ESP, "Distance", visY)
 
 local miscY = 10
 CreateToggle(TabFrames["Misc"], "Silent Aim", Settings.SilentAim, "Enabled", miscY); miscY += 60
@@ -272,7 +270,7 @@ CreateToggle(TabFrames["Misc"], "Triggerbot", Settings.Triggerbot, "Enabled", mi
 local colorY = 10
 CreateToggle(TabFrames["Colors"], "Rainbow Mode", Settings.Rainbow, "Enabled", colorY)
 
--- Color Wheel (same)
+-- Color Wheel
 local ColorFrame = Instance.new("Frame")
 ColorFrame.Size = UDim2.new(0, 200, 0, 200)
 ColorFrame.Position = UDim2.new(0.1, 0, 0, colorY + 70)
@@ -314,17 +312,16 @@ UserInputService.InputChanged:Connect(function(input)
     selectedColor = Color3.fromHSV(math.clamp(hue, 0, 1), 1, 1)
 end)
 
--- ====================== ENHANCED ESP + CLEANUP ======================
-local espObjects = {} -- plr -> {box, healthBar, distanceText}
-
+-- ====================== FIXED ESP ======================
 RunService.RenderStepped:Connect(function()
     FOVCircle.Position = Vector2.new(Mouse.X, Mouse.Y)
+    FOVCircle.Color = Settings.Rainbow.Enabled and Color3.fromHSV(rainbowHue, 1, 1) or Color3.fromRGB(255, 0, 100)
     
     for _, plr in ipairs(Players:GetPlayers()) do
         if plr == LocalPlayer or not plr.Character then continue end
-        
         local root = plr.Character:FindFirstChild("HumanoidRootPart")
         local humanoid = plr.Character:FindFirstChild("Humanoid")
+        
         if not root or not humanoid or humanoid.Health <= 0 then
             if espObjects[plr] then
                 for _, obj in pairs(espObjects[plr]) do
@@ -337,120 +334,82 @@ RunService.RenderStepped:Connect(function()
         if not espObjects[plr] then
             espObjects[plr] = {}
             local box = Drawing.new("Square")
-            box.Thickness = 2.5
-            box.Filled = false
-            box.Transparency = 1
+            box.Thickness = 2.5; box.Filled = false; box.Transparency = 1
             espObjects[plr].box = box
             
             local healthBar = Drawing.new("Square")
-            healthBar.Thickness = 1
-            healthBar.Filled = true
-            healthBar.Transparency = 1
+            healthBar.Thickness = 1; healthBar.Filled = true; healthBar.Transparency = 1
             espObjects[plr].healthBar = healthBar
             
             local distText = Drawing.new("Text")
-            distText.Size = 16
-            distText.Center = true
-            distText.Outline = true
-            distText.Transparency = 1
+            distText.Size = 16; distText.Center = true; distText.Outline = true; distText.Transparency = 1
             espObjects[plr].distanceText = distText
         end
         
-        local objects = espObjects[plr]
-        local box = objects.box
-        local healthBar = objects.healthBar
-        local distText = objects.distanceText
-        
+        local objs = espObjects[plr]
         local pos, onScreen = Camera:WorldToViewportPoint(root.Position)
+        
         if onScreen and Settings.ESP.Enabled then
             local size = Vector2.new(2200 / pos.Z, 3800 / pos.Z)
             local position = Vector2.new(pos.X - size.X/2, pos.Y - size.Y/2)
             
-            box.Visible = Settings.ESP.Boxes
-            box.Size = size
-            box.Position = position
-            box.Color = Settings.Rainbow.Enabled and Color3.fromHSV(rainbowHue,1,1) or selectedColor
-            
-            -- Health Bar
-            if Settings.ESP.Health then
-                local healthPercent = humanoid.Health / humanoid.MaxHealth
-                healthBar.Visible = true
-                healthBar.Size = Vector2.new(4, size.Y * healthPercent)
-                healthBar.Position = Vector2.new(position.X - 6, position.Y + size.Y * (1 - healthPercent))
-                healthBar.Color = Color3.fromHSV(healthPercent * 0.3, 1, 1)
+            if Settings.ESP.Boxes then
+                objs.box.Visible = true
+                objs.box.Size = size
+                objs.box.Position = position
+                objs.box.Color = Settings.Rainbow.Enabled and Color3.fromHSV(rainbowHue,1,1) or selectedColor
             else
-                healthBar.Visible = false
+                objs.box.Visible = false
             end
             
-            -- Distance
-            if Settings.ESP.Distance then
-                local distance = (root.Position - Camera.CFrame.Position).Magnitude
-                distText.Visible = true
-                distText.Text = math.floor(distance) .. " studs"
-                distText.Position = Vector2.new(pos.X, pos.Y + size.Y/2 + 20)
-                distText.Color = selectedColor
+            if Settings.ESP.Health then
+                local hpPct = humanoid.Health / humanoid.MaxHealth
+                objs.healthBar.Visible = true
+                objs.healthBar.Size = Vector2.new(5, size.Y * hpPct)
+                objs.healthBar.Position = Vector2.new(position.X - 8, position.Y + size.Y * (1 - hpPct))
+                objs.healthBar.Color = Color3.fromHSV(hpPct * 0.33, 1, 1)
             else
-                distText.Visible = false
+                objs.healthBar.Visible = false
+            end
+            
+            if Settings.ESP.Distance then
+                local dist = (root.Position - Camera.CFrame.Position).Magnitude
+                objs.distanceText.Visible = true
+                objs.distanceText.Text = math.floor(dist) .. "m"
+                objs.distanceText.Position = Vector2.new(pos.X, pos.Y + size.Y/2 + 25)
+                objs.distanceText.Color = selectedColor
+            else
+                objs.distanceText.Visible = false
             end
         else
-            box.Visible = false
-            healthBar.Visible = false
-            distText.Visible = false
+            for _, obj in pairs(objs) do if obj then obj.Visible = false end end
         end
     end
     
-    -- Cleanup dead / left players
     for plr, objs in pairs(espObjects) do
-        if not plr.Parent or not plr.Character or not plr.Character:FindFirstChild("Humanoid") or plr.Character.Humanoid.Health <= 0 then
+        if not plr or not plr.Parent or not plr.Character or not plr.Character:FindFirstChild("Humanoid") or plr.Character.Humanoid.Health <= 0 then
             for _, obj in pairs(objs) do if obj then obj:Remove() end end
             espObjects[plr] = nil
         end
     end
 end)
 
--- FOV Circle + Rainbow
-local FOVCircle = Drawing.new("Circle")
-FOVCircle.Thickness = 2.5
-FOVCircle.Radius = Settings.Aimbot.FOV
-FOVCircle.Transparency = 0.75
-FOVCircle.Visible = true
-FOVCircle.NumSides = 100
-
-local rainbowHue = 0
-local rainbowConnection
+-- Rainbow
 local function UpdateRainbow()
     if rainbowConnection then rainbowConnection:Disconnect() end
     if not Settings.Rainbow.Enabled then return end
     rainbowConnection = RunService.Heartbeat:Connect(function(dt)
-        rainbowHue = (rainbowHue + dt * 1.2) % 1
-        local c = Color3.fromHSV(rainbowHue, 1, 1)
-        FOVCircle.Color = c
+        rainbowHue = (rainbowHue + dt * 1.8) % 1
     end)
 end
 
-local function ApplyRainbowGun()
-    if not Settings.Rainbow.Enabled then return end
-    local char = LocalPlayer.Character
-    if char then
-        for _, tool in ipairs(char:GetChildren()) do
-            if tool:IsA("Tool") then
-                for _, part in ipairs(tool:GetDescendants()) do
-                    if part:IsA("BasePart") or part:IsA("MeshPart") then
-                        part.Color = Color3.fromHSV(rainbowHue, 1, 1)
-                    end
-                end
-            end
-        end
-    end
-end
-
--- Auto Enable in FFA (no teams or all same team)
+-- Auto FFA
 local function IsFFA()
     local teams = {}
-    for _, p in ipairs(Players:GetPlayers()) do
-        if p.Team then teams[p.Team] = true end
+    for _, p in Players:GetPlayers() do
+        if p.Team then teams[p.Team.Name] = true end
     end
-    return #Players:GetPlayers() > 1 and (not next(teams) or #teams == 1)
+    return #Players:GetPlayers() > 2 and (#teams <= 1)
 end
 
 if IsFFA() then
@@ -458,70 +417,71 @@ if IsFFA() then
     Settings.ESP.Enabled = true
     Settings.SilentAim.Enabled = true
     Settings.Triggerbot.Enabled = true
-    print("FFA Detected - Auto enabled full cheat")
 end
 
 -- Aimbot
 local target = nil
 RunService.RenderStepped:Connect(function()
     if not Settings.Aimbot.Enabled then return end
-    local closest, shortestDist = nil, Settings.Aimbot.FOV
-    for _, plr in ipairs(Players:GetPlayers()) do
+    local closest, shortest = nil, Settings.Aimbot.FOV
+    for _, plr in Players:GetPlayers() do
         if plr ~= LocalPlayer and plr.Character and plr.Character:FindFirstChild(Settings.Aimbot.TargetPart) then
             local part = plr.Character[Settings.Aimbot.TargetPart]
-            if not Settings.Aimbot.TeamCheck or (plr.Team ~= LocalPlayer.Team) then
-                local screenPos, onScreen = Camera:WorldToViewportPoint(part.Position)
-                if onScreen then
-                    local dist = (Vector2.new(screenPos.X, screenPos.Y) - Vector2.new(Mouse.X, Mouse.Y)).Magnitude
-                    if dist < shortestDist then
-                        shortestDist = dist
-                        closest = part
-                    end
+            if not Settings.Aimbot.TeamCheck or plr.Team ~= LocalPlayer.Team then
+                local sp, os = Camera:WorldToViewportPoint(part.Position)
+                if os then
+                    local d = (Vector2.new(sp.X, sp.Y) - Vector2.new(Mouse.X, Mouse.Y)).Magnitude
+                    if d < shortest then shortest = d; closest = part end
                 end
             end
         end
     end
     if closest then
         target = closest
-        local targetCFrame = CFrame.new(Camera.CFrame.Position, target.Position)
-        Camera.CFrame = Camera.CFrame:Lerp(targetCFrame, Settings.Aimbot.Smoothness)
+        Camera.CFrame = Camera.CFrame:Lerp(CFrame.new(Camera.CFrame.Position, target.Position), Settings.Aimbot.Smoothness)
     end
 end)
 
--- Silent Aim + Triggerbot + Rainbow (unchanged)
+-- Silent Aim
 local mt = getrawmetatable(game)
-local oldNamecall = mt.__namecall
+local old = mt.__namecall
 setreadonly(mt, false)
 mt.__namecall = newcclosure(function(self, ...)
     local args = {...}
-    if Settings.SilentAim.Enabled and (self.Name == "FindPartOnRayWithIgnoreList" or self.Name == "Raycast") then
-        if target and math.random(100) <= Settings.SilentAim.HitChance then
-            args[1] = Ray.new(Camera.CFrame.Position, (target.Position - Camera.CFrame.Position).Unit * 10000)
+    if Settings.SilentAim.Enabled and (self.Name == "FindPartOnRayWithIgnoreList" or self.Name == "Raycast") and target then
+        if math.random(100) <= Settings.SilentAim.HitChance then
+            args[1] = Ray.new(Camera.CFrame.Position, (target.Position - Camera.CFrame.Position).Unit * 20000)
         end
     end
-    return oldNamecall(self, unpack(args))
+    return old(self, unpack(args))
 end)
 setreadonly(mt, true)
 
+-- Triggerbot
 Mouse.Button1Down:Connect(function()
-    if not Settings.Triggerbot.Enabled then return end
-    spawn(function()
-        while UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1) do
-            task.wait(Settings.Triggerbot.Delay / 1000)
-        end
-    end)
-end)
-
--- RightShift Toggle (fixed)
-UserInputService.InputBegan:Connect(function(input, gameProcessed)
-    if gameProcessed then return end
-    if input.KeyCode == Enum.KeyCode.RightShift then
-        MainFrame.Visible = not MainFrame.Visible
+    if Settings.Triggerbot.Enabled then
+        spawn(function()
+            while UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1) do
+                task.wait()
+            end
+        end)
     end
 end)
 
-print("Dandawg7 PRO Cheat Loaded Successfully")
-print("Press RIGHT SHIFT to open/close menu | ESP fully fixed + Health + Distance added")
-print("Auto-inject enabled for FFA games")
+-- J KEY MENU TOGGLE
+UserInputService.InputBegan:Connect(function(input, gp)
+    if gp then return end
+    if input.KeyCode == Enum.KeyCode.J then
+        MainFrame.Visible = not MainFrame.Visible
+        print("Menu toggled via J - Visible:", MainFrame.Visible)
+    end
+end)
+
+-- Rainbow toggle
+UpdateRainbow()
+
+print("✅ Dandawg7 PRO Cheat FULLY LOADED")
+print("Press J to open/close menu | ESP fixed + Health + Distance")
+print("Auto FFA support active")
 
 [made by seraph]
