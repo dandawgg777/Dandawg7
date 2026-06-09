@@ -1,4 +1,4 @@
--- Advanced Roblox Aimbot + ESP GUI Cheat (Protocol Zero)
+-- DANDAWG7 Ultimate Roblox Aimbot + ESP GUI Cheat v4 (Protocol Zero)
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
@@ -6,116 +6,201 @@ local Camera = workspace.CurrentCamera
 local LocalPlayer = Players.LocalPlayer
 local Mouse = LocalPlayer:GetMouse()
 
-local aimbotEnabled = false
+local aimbotEnabled = true
 local silentAimEnabled = true
 local triggerbotEnabled = false
 local espEnabled = true
 local teamCheck = true
+local wallCheck = true
 
 local aimbotFOV = 120
-local aimbotSmoothness = 0.4
+local aimbotSmoothness = 0.35
 local targetPart = "Head"
-local triggerbotDelay = 0.05
+local triggerbotDelay = 0.03
 
 local connections = {}
 local espDrawings = {}
-local configFile = "cheat_config.json"
+local configFile = "dandawg7_config_v4.json"
 
--- GUI
+-- === SUPERIOR GUI ===
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "AdvancedCheatGUI"
+ScreenGui.Name = "Dandawg7CheatGUI"
 ScreenGui.ResetOnSpawn = false
 ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
 
 local MainFrame = Instance.new("Frame")
-MainFrame.Size = UDim2.new(0, 320, 0, 480)
-MainFrame.Position = UDim2.new(0.5, -160, 0.5, -240)
-MainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+MainFrame.Size = UDim2.new(0, 380, 0, 620)
+MainFrame.Position = UDim2.new(0.5, -190, 0.5, -310)
+MainFrame.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
 MainFrame.BorderSizePixel = 0
 MainFrame.Active = true
 MainFrame.Draggable = true
 MainFrame.Parent = ScreenGui
 
+local TitleBar = Instance.new("Frame")
+TitleBar.Size = UDim2.new(1, 0, 0, 60)
+TitleBar.BackgroundColor3 = Color3.fromRGB(0, 80, 180)
+TitleBar.Parent = MainFrame
+
 local Title = Instance.new("TextLabel")
-Title.Size = UDim2.new(1, 0, 0, 50)
-Title.BackgroundColor3 = Color3.fromRGB(0, 100, 200)
-Title.Text = "ADVANCED ROBLOX CHEAT"
+Title.Size = UDim2.new(1, 0, 1, 0)
+Title.BackgroundTransparency = 1
+Title.Text = "DANDAWG7 CHEAT"
 Title.TextColor3 = Color3.new(1,1,1)
 Title.TextScaled = true
-Title.Font = Enum.Font.GothamBold
-Title.Parent = MainFrame
+Title.Font = Enum.Font.GothamBlack
+Title.Parent = TitleBar
 
--- Draggable helper (already enabled via .Draggable = true)
+local function createSection(title, y)
+    local label = Instance.new("TextLabel")
+    label.Size = UDim2.new(0.95, 0, 0, 30)
+    label.Position = UDim2.new(0.025, 0, 0, y)
+    label.BackgroundTransparency = 1
+    label.Text = title
+    label.TextColor3 = Color3.fromRGB(0, 170, 255)
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    label.Font = Enum.Font.GothamBold
+    label.TextScaled = true
+    label.Parent = MainFrame
+    return label
+end
 
--- Toggle buttons (example layout)
-local function createToggle(name, yPos, defaultState)
+createSection("AIMBOT SETTINGS", 70)
+createSection("BONE STRUCTURE", 190)
+createSection("VISUALS", 340)
+
+local function createToggle(name, yPos, default)
     local btn = Instance.new("TextButton")
-    btn.Size = UDim2.new(0.9, 0, 0, 45)
+    btn.Size = UDim2.new(0.9, 0, 0, 50)
     btn.Position = UDim2.new(0.05, 0, 0, yPos)
-    btn.BackgroundColor3 = defaultState and Color3.fromRGB(0, 170, 0) or Color3.fromRGB(40, 40, 40)
-    btn.Text = name .. ": " .. (defaultState and "ON" or "OFF")
+    btn.BackgroundColor3 = default and Color3.fromRGB(0, 200, 0) or Color3.fromRGB(50, 50, 50)
+    btn.Text = name .. ": " .. (default and "ON" or "OFF")
+    btn.TextColor3 = Color3.new(1,1,1)
+    btn.TextScaled = true
+    btn.Font = Enum.Font.GothamSemibold
+    btn.Parent = MainFrame
+    
+    btn.MouseButton1Click:Connect(function()
+        local varName = name:gsub(" ", "") .. "_var"
+        _G[varName] = not _G[varName]
+        local state = _G[varName]
+        btn.Text = name .. ": " .. (state and "ON" or "OFF")
+        btn.BackgroundColor3 = state and Color3.fromRGB(0, 200, 0) or Color3.fromRGB(50, 50, 50)
+    end)
+    return btn
+end
+
+_G["Aimbot_var"] = aimbotEnabled
+_G["SilentAim_var"] = silentAimEnabled
+_G["Triggerbot_var"] = triggerbotEnabled
+_G["ESP_var"] = espEnabled
+_G["TeamCheck_var"] = teamCheck
+_G["WallCheck_var"] = wallCheck
+
+local btnAimbot = createToggle("Aimbot", 110, aimbotEnabled)
+local btnSilent = createToggle("Silent Aim", 170, silentAimEnabled)
+local btnTrigger = createToggle("Triggerbot", 230, triggerbotEnabled)
+
+-- Bone Structure Selector
+local boneOptions = {"Head", "UpperTorso", "HumanoidRootPart", "LowerTorso", "LeftHand", "RightHand"}
+local boneButtons = {}
+
+local function updateBoneButtons(selected)
+    for _, b in ipairs(boneButtons) do
+        b.BackgroundColor3 = (b.Text == selected) and Color3.fromRGB(0, 120, 255) or Color3.fromRGB(40, 40, 40)
+    end
+end
+
+for i, bone in ipairs(boneOptions) do
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(0.28, 0, 0, 40)
+    btn.Position = UDim2.new(0.05 + ((i-1)%3)*0.32, 0, 0, 230 + math.floor((i-1)/3)*50)
+    btn.BackgroundColor3 = (bone == targetPart) and Color3.fromRGB(0, 120, 255) or Color3.fromRGB(40, 40, 40)
+    btn.Text = bone
     btn.TextColor3 = Color3.new(1,1,1)
     btn.TextScaled = true
     btn.Font = Enum.Font.Gotham
     btn.Parent = MainFrame
-    return btn
+    table.insert(boneButtons, btn)
+    
+    btn.MouseButton1Click:Connect(function()
+        targetPart = bone
+        updateBoneButtons(bone)
+    end)
 end
 
-local btnAimbot = createToggle("Aimbot", 60, aimbotEnabled)
-local btnSilent = createToggle("Silent Aim", 115, silentAimEnabled)
-local btnTrigger = createToggle("Triggerbot", 170, triggerbotEnabled)
-local btnESP = createToggle("ESP", 225, espEnabled)
-local btnTeam = createToggle("Team Check", 280, teamCheck)
+-- Sliders
+local function createSlider(labelText, yPos, minVal, maxVal, defaultVal, onChange)
+    local label = Instance.new("TextLabel")
+    label.Size = UDim2.new(0.9, 0, 0, 25)
+    label.Position = UDim2.new(0.05, 0, 0, yPos)
+    label.BackgroundTransparency = 1
+    label.Text = labelText .. ": " .. defaultVal
+    label.TextColor3 = Color3.new(1,1,1)
+    label.TextScaled = true
+    label.Parent = MainFrame
 
--- GUI Toggle Key (Insert)
-UserInputService.InputBegan:Connect(function(input)
-    if input.KeyCode == Enum.KeyCode.Insert then
-        ScreenGui.Enabled = not ScreenGui.Enabled
-    end
-end)
+    local slider = Instance.new("TextButton")
+    slider.Size = UDim2.new(0.9, 0, 0, 20)
+    slider.Position = UDim2.new(0.05, 0, 0, yPos + 30)
+    slider.BackgroundColor3 = Color3.fromRGB(60,60,60)
+    slider.Text = ""
+    slider.Parent = MainFrame
 
--- Config Save/Load
-local function saveConfig()
-    local config = {
-        aimbotEnabled = aimbotEnabled,
-        silentAimEnabled = silentAimEnabled,
-        triggerbotEnabled = triggerbotEnabled,
-        espEnabled = espEnabled,
-        teamCheck = teamCheck,
-        aimbotFOV = aimbotFOV,
-        aimbotSmoothness = aimbotSmoothness
-    }
-    writefile(configFile, game:GetService("HttpService"):JSONEncode(config))
-end
-
-local function loadConfig()
-    if isfile(configFile) then
-        local success, config = pcall(function()
-            return game:GetService("HttpService"):JSONDecode(readfile(configFile))
+    local value = defaultVal
+    slider.MouseButton1Down:Connect(function()
+        local conn = UserInputService.InputChanged:Connect(function(inp)
+            if inp.UserInputType == Enum.UserInputType.MouseMovement then
+                local rel = math.clamp((Mouse.X - slider.AbsolutePosition.X) / slider.AbsoluteSize.X, 0, 1)
+                value = math.floor(minVal + rel * (maxVal - minVal))
+                label.Text = labelText .. ": " .. value
+                onChange(value)
+            end
         end)
-        if success then
-            aimbotEnabled = config.aimbotEnabled or false
-            silentAimEnabled = config.silentAimEnabled or true
-            -- apply other values...
-        end
-    end
+        local endConn; endConn = UserInputService.InputEnded:Connect(function()
+            conn:Disconnect()
+            endConn:Disconnect()
+        end)
+    end)
+    return label, slider
 end
 
-loadConfig()
+local fovLabel, _ = createSlider("FOV", 480, 30, 500, aimbotFOV, function(v) aimbotFOV = v end)
+local smoothLabel, _ = createSlider("Smoothness", 530, 0, 100, math.floor(aimbotSmoothness*100), function(v) aimbotSmoothness = v/100 end)
 
--- Aimbot & Silent Aim
+-- FOV Circle
+local fovCircle = Drawing.new("Circle")
+fovCircle.Thickness = 2
+fovCircle.Color = Color3.fromRGB(255, 50, 50)
+fovCircle.Filled = false
+fovCircle.Transparency = 0.7
+fovCircle.NumSides = 64
+
+-- Wall Check
+local function isVisible(targetChar)
+    if not wallCheck then return true end
+    local root = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+    local targetRoot = targetChar:FindFirstChild("HumanoidRootPart")
+    if not root or not targetRoot then return false end
+    local direction = (targetRoot.Position - root.Position)
+    local ray = Ray.new(root.Position, direction)
+    local hit, _ = workspace:FindPartOnRayWithIgnoreList(ray, {LocalPlayer.Character, targetChar})
+    return not hit
+end
+
 local function getClosestPlayer()
-    local closest, dist = nil, aimbotFOV
+    local closest, shortest = nil, aimbotFOV
     for _, plr in ipairs(Players:GetPlayers()) do
         if plr ~= LocalPlayer and plr.Character and plr.Character:FindFirstChild(targetPart) then
             if teamCheck and plr.Team == LocalPlayer.Team then continue end
+            if not isVisible(plr.Character) then continue end
             local part = plr.Character[targetPart]
             local screenPos, onScreen = Camera:WorldToViewportPoint(part.Position)
             if onScreen then
                 local mousePos = UserInputService:GetMouseLocation()
                 local d = (Vector2.new(screenPos.X, screenPos.Y) - mousePos).Magnitude
-                if d < dist then
-                    dist = d
+                if d < shortest then
+                    shortest = d
                     closest = plr
                 end
             end
@@ -124,19 +209,18 @@ local function getClosestPlayer()
     return closest
 end
 
-local oldNamecall
-oldNamecall = hookmetamethod(game, "__namecall", function(self, ...)
+-- Silent Aim Hook
+local oldNamecall = hookmetamethod(game, "__namecall", function(self, ...)
     local method = getnamecallmethod()
-    if silentAimEnabled and method == "FireServer" and self.Name:lower():find("shoot") or self.Name:lower():find("bullet") then
-        local args = {...}
+    if silentAimEnabled and (method == "FireServer" and (self.Name:lower():find("shoot") or self.Name:lower():find("bullet") or self.Name:lower():find("hit"))) then
         local target = getClosestPlayer()
         if target and target.Character and target.Character:FindFirstChild(targetPart) then
-            -- Modify hit position for silent aim (common pattern)
+            local args = {...}
             if args[1] and typeof(args[1]) == "Vector3" then
-                args[1] = target.Character[targetPart].Position
+                args[1] = target.Character[targetPart].Position + Vector3.new(0, 0.1, 0)
             end
+            return oldNamecall(self, unpack(args))
         end
-        return oldNamecall(self, unpack(args))
     end
     return oldNamecall(self, ...)
 end)
@@ -152,133 +236,101 @@ local function updateAimbot()
     end
 end
 
--- Triggerbot
-local function triggerbotLoop()
-    if not triggerbotEnabled then return end
-    local target = getClosestPlayer()
-    if target then
-        Mouse1Click() -- or fireclickdetector if needed
-        task.wait(triggerbotDelay)
-    end
+local function updateFOVCircle()
+    fovCircle.Visible = aimbotEnabled or silentAimEnabled
+    fovCircle.Radius = aimbotFOV
+    fovCircle.Position = UserInputService:GetMouseLocation()
 end
 
--- Enhanced ESP with Health
+-- ESP
 local function createESP(plr)
     if espDrawings[plr] then return end
-    local box = Drawing.new("Square")
-    box.Thickness = 2
-    box.Color = Color3.fromRGB(255, 0, 0)
-    box.Filled = false
-    box.Transparency = 1
-
-    local healthBar = Drawing.new("Square")
-    healthBar.Thickness = 1
-    healthBar.Filled = true
-    healthBar.Color = Color3.fromRGB(0, 255, 0)
-
-    local nameTag = Drawing.new("Text")
-    nameTag.Size = 16
-    nameTag.Color = Color3.fromRGB(255, 255, 255)
-    nameTag.Center = true
-    nameTag.Outline = true
-
-    espDrawings[plr] = {box = box, health = healthBar, name = nameTag}
+    local box = Drawing.new("Square"); box.Thickness=2; box.Filled=false; box.Transparency=1
+    local healthBarOutline = Drawing.new("Square"); healthBarOutline.Thickness=1; healthBarOutline.Filled=false
+    local healthBar = Drawing.new("Square"); healthBar.Filled=true
+    local nameTag = Drawing.new("Text"); nameTag.Size=15; nameTag.Center=true; nameTag.Outline=true; nameTag.Color=Color3.new(1,1,1)
+    espDrawings[plr] = {box=box, hbar=healthBar, houtline=healthBarOutline, name=nameTag}
 end
 
 local function updateESP()
     if not espEnabled then
-        for _, v in pairs(espDrawings) do
-            v.box.Visible = false
-            v.health.Visible = false
-            v.name.Visible = false
-        end
+        for _, d in pairs(espDrawings) do for _, obj in pairs(d) do obj.Visible = false end end
         return
     end
-
     for _, plr in ipairs(Players:GetPlayers()) do
         if plr == LocalPlayer or not plr.Character or not plr.Character:FindFirstChild("HumanoidRootPart") then continue end
         if teamCheck and plr.Team == LocalPlayer.Team then continue end
+        if not isVisible(plr.Character) then 
+            if espDrawings[plr] then for _, obj in pairs(espDrawings[plr]) do obj.Visible=false end end
+            continue 
+        end
 
         if not espDrawings[plr] then createESP(plr) end
-        local drawings = espDrawings[plr]
+        local d = espDrawings[plr]
         local root = plr.Character.HumanoidRootPart
-        local humanoid = plr.Character:FindFirstChild("Humanoid")
-        local rootPos, onScreen = Camera:WorldToViewportPoint(root.Position)
-
+        local hum = plr.Character:FindFirstChild("Humanoid")
+        local pos, onScreen = Camera:WorldToViewportPoint(root.Position)
         if onScreen then
-            local headPos = Camera:WorldToViewportPoint(root.Position + Vector3.new(0, 3, 0))
-            local legPos = Camera:WorldToViewportPoint(root.Position - Vector3.new(0, 3.5, 0))
-            local height = math.abs(headPos.Y - legPos.Y)
-            local width = height * 0.6
+            local top = Camera:WorldToViewportPoint(root.Position + Vector3.new(0,3,0))
+            local bot = Camera:WorldToViewportPoint(root.Position - Vector3.new(0,3.5,0))
+            local h = math.abs(top.Y - bot.Y)
+            local w = h * 0.6
 
-            drawings.box.Size = Vector2.new(width, height)
-            drawings.box.Position = Vector2.new(rootPos.X - width/2, rootPos.Y - height/2)
-            drawings.box.Visible = true
+            d.box.Size = Vector2.new(w, h)
+            d.box.Position = Vector2.new(pos.X - w/2, pos.Y - h/2)
+            d.box.Color = Color3.fromRGB(255, 50, 50)
+            d.box.Visible = true
 
-            -- Health bar
-            if humanoid then
-                local healthPercent = humanoid.Health / humanoid.MaxHealth
-                drawings.health.Size = Vector2.new(4, height * healthPercent)
-                drawings.health.Position = Vector2.new(rootPos.X - width/2 - 6, rootPos.Y - height/2 + (height * (1 - healthPercent)))
-                drawings.health.Visible = true
+            if hum then
+                local hp = hum.Health / hum.MaxHealth
+                d.houtline.Size = Vector2.new(4, h)
+                d.houtline.Position = Vector2.new(pos.X - w/2 - 8, pos.Y - h/2)
+                d.houtline.Visible = true
+                d.hbar.Size = Vector2.new(4, h * hp)
+                d.hbar.Position = Vector2.new(pos.X - w/2 - 8, pos.Y - h/2 + h * (1-hp))
+                d.hbar.Color = Color3.fromRGB(255 - 255*hp, 255*hp, 0)
+                d.hbar.Visible = true
             end
 
-            drawings.name.Text = plr.Name .. " [" .. math.floor((LocalPlayer.Character and LocalPlayer.Character.HumanoidRootPart.Position - root.Position).Magnitude or 0) .. "m]"
-            drawings.name.Position = Vector2.new(rootPos.X, rootPos.Y - height/2 - 18)
-            drawings.name.Visible = true
+            d.name.Text = string.format("%s [%dm]", plr.Name, (root.Position - (LocalPlayer.Character and LocalPlayer.Character.HumanoidRootPart.Position or Vector3.new())).Magnitude)
+            d.name.Position = Vector2.new(pos.X, pos.Y - h/2 - 20)
+            d.name.Visible = true
         else
-            drawings.box.Visible = false
-            drawings.health.Visible = false
-            drawings.name.Visible = false
+            for _, obj in pairs(d) do obj.Visible = false end
         end
     end
 end
 
--- Button connections
-btnAimbot.MouseButton1Click:Connect(function()
-    aimbotEnabled = not aimbotEnabled
-    btnAimbot.Text = "Aimbot: " .. (aimbotEnabled and "ON" or "OFF")
-    btnAimbot.BackgroundColor3 = aimbotEnabled and Color3.fromRGB(0,170,0) or Color3.fromRGB(40,40,40)
-    saveConfig()
-end)
+local function triggerbotLoop()
+    if not triggerbotEnabled then return end
+    local target = getClosestPlayer()
+    if target then
+        mouse1click()
+        task.wait(triggerbotDelay)
+    end
+end
 
-btnSilent.MouseButton1Click:Connect(function()
-    silentAimEnabled = not silentAimEnabled
-    btnSilent.Text = "Silent Aim: " .. (silentAimEnabled and "ON" or "OFF")
-    btnSilent.BackgroundColor3 = silentAimEnabled and Color3.fromRGB(0,170,0) or Color3.fromRGB(40,40,40)
-    saveConfig()
-end)
-
-btnTrigger.MouseButton1Click:Connect(function()
-    triggerbotEnabled = not triggerbotEnabled
-    btnTrigger.Text = "Triggerbot: " .. (triggerbotEnabled and "ON" or "OFF")
-    btnTrigger.BackgroundColor3 = triggerbotEnabled and Color3.fromRGB(0,170,0) or Color3.fromRGB(40,40,40)
-    saveConfig()
-end)
-
-btnESP.MouseButton1Click:Connect(function()
-    espEnabled = not espEnabled
-    btnESP.Text = "ESP: " .. (espEnabled and "ON" or "OFF")
-    btnESP.BackgroundColor3 = espEnabled and Color3.fromRGB(0,170,0) or Color3.fromRGB(40,40,40)
-    saveConfig()
-end)
-
-btnTeam.MouseButton1Click:Connect(function()
-    teamCheck = not teamCheck
-    btnTeam.Text = "Team Check: " .. (teamCheck and "ON" or "OFF")
-    btnTeam.BackgroundColor3 = teamCheck and Color3.fromRGB(0,170,0) or Color3.fromRGB(40,40,40)
-    saveConfig()
-end)
-
--- Main loops
+-- Main Loops
 table.insert(connections, RunService.RenderStepped:Connect(updateAimbot))
 table.insert(connections, RunService.RenderStepped:Connect(updateESP))
+table.insert(connections, RunService.RenderStepped:Connect(updateFOVCircle))
 table.insert(connections, RunService.Heartbeat:Connect(triggerbotLoop))
 
-print("Advanced Cheat Loaded - All features active")
-print("Press INSERT to toggle GUI")
+-- GUI Toggle
+UserInputService.InputBegan:Connect(function(i)
+    if i.KeyCode == Enum.KeyCode.Insert then
+        ScreenGui.Enabled = not ScreenGui.Enabled
+    end
+end)
 
--- Cleanup
+print("DANDAWG7 CHEAT LOADED - Press INSERT to toggle GUI")
+
+-- Auto save
 game:BindToClose(function()
-    saveConfig()
+    local config = {
+        aimbotEnabled=aimbotEnabled, silentAimEnabled=silentAimEnabled,
+        triggerbotEnabled=triggerbotEnabled, espEnabled=espEnabled,
+        teamCheck=teamCheck, wallCheck=wallCheck, aimbotFOV=aimbotFOV
+    }
+    writefile(configFile, game:GetService("HttpService"):JSONEncode(config))
 end)
